@@ -205,7 +205,7 @@ async def main() -> NoReturn:
     load_dotenv()
     secrets = Secrets()
 
-    po = PassaportoOnline(headless=False)
+    po = PassaportoOnline()
     credentials = secrets.get_credentials()
     await po.login(credentials)
     # po.cookie_login(secrets.SPID_SESSION_ID)
