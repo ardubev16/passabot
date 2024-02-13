@@ -151,7 +151,7 @@ class PassaportoOnline:
                 logger.error("Could not find selectRichiedente, refreshing...")
             self.driver.refresh()
         else:
-            raise TimeoutException("Could not find selectRichiedente")
+            raise NoSuchElementException("Could not find selectRichiedente")
 
         Select(self.driver.find_element(By.ID, "selectRichiedente")).select_by_visible_text("Me stesso")
         self.driver.find_element(By.XPATH, "//button[contains(text(), 'Continua')]").click()
