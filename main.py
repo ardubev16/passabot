@@ -188,16 +188,20 @@ class PassaportoOnline:
 
 
 async def check_availability(po: PassaportoOnline, credentials: Credentials, bot: Bot, chat_id: str) -> NoReturn:
-    while True:
-        logged_in = await po.refresh_session(credentials)
-        if logged_in:
-            available = po.check_availability()
-            for entry in available:
-                await bot.send_message(chat_id=chat_id, text=str(entry), parse_mode=ParseMode.HTML)
-            await asyncio.sleep(60)
-        else:
-            bot.send_message(chat_id=chat_id, text="Could not login, retrying in 5 minutes...")
-            await asyncio.sleep(60 * 5)
+    try:
+        while True:
+            logged_in = await po.refresh_session(credentials)
+            if logged_in:
+                available = po.check_availability()
+                for entry in available:
+                    await bot.send_message(chat_id=chat_id, text=str(entry), parse_mode=ParseMode.HTML)
+                await asyncio.sleep(60)
+            else:
+                bot.send_message(chat_id=chat_id, text="Could not login, retrying in 5 minutes...")
+                await asyncio.sleep(60 * 5)
+    except NoSuchElementException:
+        po.driver.save_screenshot("error.png")
+        raise
 
 
 async def send_heartbeat(bot: Bot, chat_id: str) -> NoReturn:
