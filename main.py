@@ -189,7 +189,8 @@ class PassaportoOnline:
 
 async def check_availability(po: PassaportoOnline, credentials: Credentials, bot: Bot, chat_id: str) -> NoReturn:
     while True:
-        if await po.refresh_session(credentials):
+        logged_in = await po.refresh_session(credentials)
+        if logged_in:
             available = po.check_availability()
             for entry in available:
                 await bot.send_message(chat_id=chat_id, text=str(entry), parse_mode=ParseMode.HTML)
