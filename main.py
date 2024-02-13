@@ -24,6 +24,10 @@ PASSAPORTOONLINE_URL = "https://passaportonline.poliziadistato.it/cittadino/{}"
 logging.basicConfig(
     level=logging.INFO,
     format="[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("passabot.log"),
+        logging.StreamHandler(),
+    ],
 )
 logger = logging.getLogger(__name__)
 
