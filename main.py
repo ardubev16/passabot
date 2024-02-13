@@ -98,6 +98,7 @@ class PassaportoOnline:
         self.driver.find_element(By.ID, "username").send_keys(credentials.username)
         self.driver.find_element(By.ID, "password").send_keys(credentials.password)
         self.driver.find_element(By.XPATH, "//button[@type='submit']").click()
+        logger.info("Submitted login credentials")
 
     def cookie_login(self, session_id: str) -> None:
         self.driver.get("https://passaportonline.poliziadistato.it")
@@ -115,7 +116,7 @@ class PassaportoOnline:
     def _refresh(self) -> None:
         self.driver.refresh()
 
-    def login(self, credentials: Credentials) -> None:
+    async def login(self, credentials: Credentials) -> None:
         LOGIN_URL = PASSAPORTOONLINE_URL.format("n/sc/loginCittadino/sceltaLogin")
 
         # Go to the login page (PosteID)
@@ -129,7 +130,7 @@ class PassaportoOnline:
         self._fill_login_form(credentials)
         self.driver.find_element(By.XPATH, "//span[contains(., 'Voglio ricevere una notifica')]").click()
         logger.info("Waiting for the user to confirm the login...")
-        input("Press Enter to continue...")
+        await asyncio.sleep(60)
         self.driver.find_element(By.XPATH, "//button[contains(text(), 'Acconsento')]").click()
         session_id = self.driver.get_cookie("JSESSIONID")
         logger.info(f"Session ID: {session_id}")
@@ -168,13 +169,13 @@ class PassaportoOnline:
 
         return available
 
-    def refresh_session(self, credentials: Credentials) -> bool:
+    async def refresh_session(self, credentials: Credentials) -> bool:
         self._refresh()
         if self.is_logged_in():
             return True
 
         try:
-            self.login(credentials)
+            await self.login(credentials)
             self.view_locations()
             return True
         except NoSuchElementException:
@@ -184,7 +185,7 @@ class PassaportoOnline:
 
 async def check_availability(po: PassaportoOnline, credentials: Credentials, bot: Bot, chat_id: str) -> NoReturn:
     while True:
-        if po.refresh_session(credentials):
+        if await po.refresh_session(credentials):
             available = po.check_availability()
             for entry in available:
                 await bot.send_message(chat_id=chat_id, text=str(entry), parse_mode=ParseMode.HTML)
@@ -206,7 +207,7 @@ async def main() -> NoReturn:
 
     po = PassaportoOnline(headless=False)
     credentials = secrets.get_credentials()
-    po.login(credentials)
+    await po.login(credentials)
     # po.cookie_login(secrets.SPID_SESSION_ID)
     po.view_locations()
 
