@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from pydantic import Field
 from pydantic_settings import BaseSettings
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.select import Select
