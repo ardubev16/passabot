@@ -192,9 +192,14 @@ async def check_availability(po: PassaportoOnline, credentials: Credentials, bot
         while True:
             logged_in = await po.refresh_session(credentials)
             if logged_in:
-                available = po.check_availability()
-                for entry in available:
-                    await bot.send_message(chat_id=chat_id, text=str(entry), parse_mode=ParseMode.HTML)
+                try:
+                    available = po.check_availability()
+                except NoSuchElementException:
+                    logger.error("Could not find the availability table, retrying...")
+                    bot.send_message(chat_id=chat_id, text="Could not find the availability table, retrying...")
+                else:
+                    for entry in available:
+                        await bot.send_message(chat_id=chat_id, text=str(entry), parse_mode=ParseMode.HTML)
                 await asyncio.sleep(60)
             else:
                 bot.send_message(chat_id=chat_id, text="Could not login, retrying in 5 minutes...")
