@@ -215,7 +215,7 @@ async def send_heartbeat(bot: Bot, chat_id: str) -> NoReturn:
         await asyncio.sleep(60 * 60)
 
 
-async def main() -> NoReturn:
+async def main() -> None:
     load_dotenv()
     secrets = Secrets()
 
