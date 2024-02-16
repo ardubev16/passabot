@@ -91,6 +91,7 @@ def _serialize_availability_table(table: WebElement) -> List[AvailabilityEntry]:
 class PassaportoOnline:
     def __init__(self, headless: bool = True) -> None:
         chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument("--no-sandbox")
         if headless:
             chrome_options.add_argument("--headless")
 
