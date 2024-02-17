@@ -197,13 +197,13 @@ async def check_availability(po: PassaportoOnline, credentials: Credentials, bot
                     available = po.check_availability()
                 except NoSuchElementException:
                     logger.error("Could not find the availability table, retrying...")
-                    bot.send_message(chat_id=chat_id, text="Could not find the availability table, retrying...")
+                    await bot.send_message(chat_id=chat_id, text="Could not find the availability table, retrying...")
                 else:
                     for entry in available:
                         await bot.send_message(chat_id=chat_id, text=str(entry), parse_mode=ParseMode.HTML)
                 await asyncio.sleep(60)
             else:
-                bot.send_message(chat_id=chat_id, text="Could not login, retrying in 5 minutes...")
+                await bot.send_message(chat_id=chat_id, text="Could not login, retrying in 5 minutes...")
                 await asyncio.sleep(60 * 5)
     except NoSuchElementException:
         po.driver.save_screenshot("error.png")
@@ -223,10 +223,10 @@ async def main() -> None:
     async with Bot(secrets.TELEGRAM_BOT_TOKEN) as bot:
         await bot.send_message(chat_id=secrets.TELEGRAM_CHAT_ID, text="Bot started")
         try:
-            asyncio.create_task(check_availability(po, credentials, bot, secrets.TELEGRAM_CHAT_ID))
+            await asyncio.create_task(check_availability(po, credentials, bot, secrets.TELEGRAM_CHAT_ID))
         except Exception as e:
             message = f"An error occurred:\n\n<code>{e}</code>"
-            bot.send_message(chat_id=secrets.TELEGRAM_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
+            await bot.send_message(chat_id=secrets.TELEGRAM_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
             raise
 
 
