@@ -210,12 +210,6 @@ async def check_availability(po: PassaportoOnline, credentials: Credentials, bot
         raise
 
 
-async def send_heartbeat(bot: Bot, chat_id: str) -> NoReturn:
-    while True:
-        await bot.send_message(chat_id=chat_id, text="Heartbeat, I'm running!", disable_notification=True)
-        await asyncio.sleep(60 * 60)
-
-
 async def main() -> None:
     load_dotenv()
     secrets = Secrets()
@@ -227,9 +221,13 @@ async def main() -> None:
     po.view_locations()
 
     async with Bot(secrets.TELEGRAM_BOT_TOKEN) as bot:
-        async with asyncio.TaskGroup() as tg:
-            tg.create_task(check_availability(po, credentials, bot, secrets.TELEGRAM_CHAT_ID))
-            tg.create_task(send_heartbeat(bot, secrets.TELEGRAM_CHAT_ID))
+        await bot.send_message(chat_id=secrets.TELEGRAM_CHAT_ID, text="Bot started")
+        try:
+            asyncio.create_task(check_availability(po, credentials, bot, secrets.TELEGRAM_CHAT_ID))
+        except Exception as e:
+            message = f"An error occurred:\n\n<code>{e}</code>"
+            bot.send_message(chat_id=secrets.TELEGRAM_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
+            raise
 
 
 if __name__ == "__main__":
