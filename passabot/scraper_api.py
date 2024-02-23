@@ -75,25 +75,27 @@ class ApiScraper(IScraper):
         logger.info(f"Found {len(available)} available appointments")
         return available
 
-    async def check_availability(self, bot: Bot, chat_id: str) -> NoReturn:
+    async def check_availability(self, bot: Bot, data_chat_id: str, control_chat_id: str) -> NoReturn:
         logged_in = True
         while True:
             if not logged_in:
                 logged_in = await self.login()
                 if not logged_in:
-                    await bot.send_message(chat_id=chat_id, text="Could not login, retrying in 5 minutes...")
+                    await bot.send_message(chat_id=control_chat_id, text="Could not login, retrying in 5 minutes...")
                     await asyncio.sleep(60 * 5)
                     continue
 
             try:
                 available = self._scrape_availability("VI")
             except ResponseError as e:
-                await bot.send_message(chat_id=chat_id, text=str(e))
+                await bot.send_message(chat_id=control_chat_id, text=str(e))
                 logged_in = False
             except requests.exceptions.JSONDecodeError:
-                await bot.send_message(chat_id=chat_id, text="Could not decode the server response, retrying...")
+                await bot.send_message(
+                    chat_id=control_chat_id, text="Could not decode the server response, retrying..."
+                )
             else:
                 for entry in available:
-                    await bot.send_message(chat_id=chat_id, text=str(entry), parse_mode=ParseMode.HTML)
+                    await bot.send_message(chat_id=data_chat_id, text=str(entry), parse_mode=ParseMode.HTML)
 
             await asyncio.sleep(60)

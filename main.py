@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings
 from telegram import Bot
 from telegram.constants import ParseMode
 
-from passabot.authenticators import AuthData, Authenticator, Credentials, ManualAuthenticator
+from passabot.authenticators import AuthData, Authenticator, Credentials
 from passabot.scraper_api import ApiScraper
 
 logging.basicConfig(
@@ -31,7 +31,8 @@ class Secrets(BaseSettings):
     SPID_PASSWORD: str = Field(default=...)
 
     TELEGRAM_BOT_TOKEN: str = Field(default=...)
-    TELEGRAM_CHAT_ID: str = Field(default=...)
+    TELEGRAM_DATA_CHAT_ID: str = Field(default=...)
+    TELEGRAM_CONTROL_CHAT_ID: str = Field(default=...)
 
     def get_credentials(self) -> Credentials:
         return Credentials(
@@ -56,12 +57,14 @@ async def main() -> None:
     await scraper.login()
 
     async with Bot(secrets.TELEGRAM_BOT_TOKEN) as bot:
-        await bot.send_message(chat_id=secrets.TELEGRAM_CHAT_ID, text="Bot started")
+        await bot.send_message(chat_id=secrets.TELEGRAM_CONTROL_CHAT_ID, text="Bot started")
         try:
-            await asyncio.create_task(scraper.check_availability(bot, secrets.TELEGRAM_CHAT_ID))
+            await asyncio.create_task(
+                scraper.check_availability(bot, secrets.TELEGRAM_DATA_CHAT_ID, secrets.TELEGRAM_CONTROL_CHAT_ID)
+            )
         except Exception as e:
             message = f"An error occurred:\n\n<code>{e}</code>"
-            await bot.send_message(chat_id=secrets.TELEGRAM_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
+            await bot.send_message(chat_id=secrets.TELEGRAM_CONTROL_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
             raise
 
 

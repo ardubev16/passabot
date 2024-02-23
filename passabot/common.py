@@ -32,5 +32,5 @@ class IScraper(ABC):
         pass
 
     @abstractmethod
-    async def check_availability(self, bot: Bot, chat_id: str) -> NoReturn:
+    async def check_availability(self, bot: Bot, data_chat_id: str, control_chat_id: str) -> NoReturn:
         pass

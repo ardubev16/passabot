@@ -111,7 +111,7 @@ class SeleniumScraper(IScraper):
 
         return available
 
-    async def check_availability(self, bot: Bot, chat_id: str) -> NoReturn:
+    async def check_availability(self, bot: Bot, data_chat_id: str, control_chat_id: str) -> NoReturn:
         self._view_locations()
         try:
             while True:
@@ -122,14 +122,14 @@ class SeleniumScraper(IScraper):
                     except NoSuchElementException:
                         logger.error("Could not find the availability table, retrying...")
                         await bot.send_message(
-                            chat_id=chat_id, text="Could not find the availability table, retrying..."
+                            chat_id=control_chat_id, text="Could not find the availability table, retrying..."
                         )
                     else:
                         for entry in available:
-                            await bot.send_message(chat_id=chat_id, text=str(entry), parse_mode=ParseMode.HTML)
+                            await bot.send_message(chat_id=data_chat_id, text=str(entry), parse_mode=ParseMode.HTML)
                     await asyncio.sleep(60)
                 else:
-                    await bot.send_message(chat_id=chat_id, text="Could not login, retrying in 5 minutes...")
+                    await bot.send_message(chat_id=control_chat_id, text="Could not login, retrying in 5 minutes...")
                     await asyncio.sleep(60 * 5)
         except NoSuchElementException:
             self.driver.save_screenshot("error.png")
