@@ -7,6 +7,7 @@ from typing import NoReturn
 import requests
 from telegram import Bot
 from telegram.constants import ParseMode
+from selenium.common.exceptions import NoSuchElementException
 
 from passabot.authenticators import IAuthenticator
 from passabot.common import PASSAPORTOONLINE_URL, AvailabilityEntry, IScraper
@@ -22,10 +23,15 @@ class ApiScraper(IScraper):
     def __init__(self, authenticator: IAuthenticator) -> None:
         self.authenticator = authenticator
 
-    async def login(self) -> None:
-        auth_data = await self.authenticator.login()
+    async def login(self) -> bool:
+        try:
+            auth_data = await self.authenticator.login()
+        except NoSuchElementException:
+            return False
+
         self.csrf_token = auth_data.csrf_token
         self.session_id = auth_data.session_id
+        return True
 
     def _scrape_availability(self, province: str) -> list[AvailabilityEntry]:
         USER_AGENT = (
@@ -73,8 +79,11 @@ class ApiScraper(IScraper):
         logged_in = True
         while True:
             if not logged_in:
-                await self.login()
-                logged_in = True
+                logged_in = await self.login()
+                if not logged_in:
+                    await bot.send_message(chat_id=chat_id, text="Could not login, retrying in 5 minutes...")
+                    await asyncio.sleep(60 * 5)
+                    continue
 
             try:
                 available = self._scrape_availability("VI")

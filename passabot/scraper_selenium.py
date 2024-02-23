@@ -55,8 +55,11 @@ class SeleniumScraper(IScraper):
     def _is_logged_in(self) -> bool:
         return "login" not in self.driver.current_url
 
-    async def login(self) -> None:
-        auth_data = await self.authenticator.login()
+    async def login(self) -> bool:
+        try:
+            auth_data = await self.authenticator.login()
+        except NoSuchElementException:
+            return False
         self.driver.add_cookie(
             {
                 "name": "JSESSIONID",
@@ -64,6 +67,7 @@ class SeleniumScraper(IScraper):
             }
         )
         logger.info("Logged in with JSESSIONID cookie")
+        return True
 
     def _view_locations(self) -> None:
         SCELTA_COMUNE_URL = PASSAPORTOONLINE_URL.format("a/sc/wizardAppuntamentoCittadino/sceltaComune")
@@ -87,13 +91,12 @@ class SeleniumScraper(IScraper):
         if self._is_logged_in():
             return True
 
-        try:
-            await self.login()
-            self._view_locations()
-            return True
-        except NoSuchElementException:
+        login_result = await self.login()
+        if not login_result:
             logger.error("Could not login, retrying in 5 minutes...")
             return False
+
+        return True
 
     def _scrape_availability(self) -> list[AvailabilityEntry]:
         table = self.driver.find_element(

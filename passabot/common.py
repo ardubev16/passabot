@@ -28,7 +28,7 @@ class AvailabilityEntry:
 
 class IScraper(ABC):
     @abstractmethod
-    async def login(self) -> None:
+    async def login(self) -> bool:
         pass
 
     @abstractmethod
