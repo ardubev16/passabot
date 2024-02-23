@@ -77,6 +77,7 @@ class ApiScraper(IScraper):
 
     async def check_availability(self, bot: Bot, data_chat_id: str, control_chat_id: str) -> NoReturn:
         logged_in = True
+        notifications_counter = 0
         while True:
             if not logged_in:
                 logged_in = await self.login()
@@ -95,7 +96,17 @@ class ApiScraper(IScraper):
                     chat_id=control_chat_id, text="Could not decode the server response, retrying..."
                 )
             else:
+                if len(available) == 0:
+                    notifications_counter = 0
+                else:
+                    notifications_counter += 1
+
                 for entry in available:
-                    await bot.send_message(chat_id=data_chat_id, text=str(entry), parse_mode=ParseMode.HTML)
+                    await bot.send_message(
+                        chat_id=data_chat_id,
+                        text=str(entry),
+                        parse_mode=ParseMode.HTML,
+                        disable_notification=notifications_counter >= 20,
+                    )
 
             await asyncio.sleep(60)
