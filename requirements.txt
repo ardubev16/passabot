@@ -1,4 +1,6 @@
-selenium
-python-telegram-bot
-python-dotenv
 pydantic-settings
+python-dotenv
+python-telegram-bot
+requests
+selenium
+types-requests
