@@ -20,8 +20,9 @@ class ResponseError(Exception):
 
 
 class ApiScraper(IScraper):
-    def __init__(self, authenticator: IAuthenticator) -> None:
+    def __init__(self, authenticator: IAuthenticator, province: str) -> None:
         self.authenticator = authenticator
+        self.province = province
 
     async def login(self) -> bool:
         try:
@@ -33,13 +34,13 @@ class ApiScraper(IScraper):
         self.session_id = auth_data.session_id
         return True
 
-    def _scrape_availability(self, province: str) -> list[AvailabilityEntry]:
+    def _scrape_availability(self) -> list[AvailabilityEntry]:
         USER_AGENT = (
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
         )
         data = {
             "disponibilitaNonResidenti": True,
-            "comune": {"provinciaQuestura": province},
+            "comune": {"provinciaQuestura": self.province},
             "pageInfo": {"maxResults": 5},
             "sortInfo": {"sortList": [{"sortDirection": 0, "sortProperty": "primaDisponibilitaResidente"}]},
         }
@@ -87,7 +88,7 @@ class ApiScraper(IScraper):
                     continue
 
             try:
-                available = self._scrape_availability("VI")
+                available = self._scrape_availability()
             except ResponseError as e:
                 await bot.send_message(chat_id=control_chat_id, text=str(e))
                 logged_in = False

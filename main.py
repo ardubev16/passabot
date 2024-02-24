@@ -29,6 +29,7 @@ class Secrets(BaseSettings):
     CSRF_TOKEN: str = Field(default=...)
     SPID_USERNAME: str = Field(default=...)
     SPID_PASSWORD: str = Field(default=...)
+    TARGET_PROVINCE: str = Field(default=...)
 
     TELEGRAM_BOT_TOKEN: str = Field(default=...)
     TELEGRAM_DATA_CHAT_ID: str = Field(default=...)
@@ -53,7 +54,7 @@ async def main() -> None:
 
     # authenticator = ManualAuthenticator(secrets.get_auth_data())
     authenticator = Authenticator(secrets.get_credentials())
-    scraper = ApiScraper(authenticator)
+    scraper = ApiScraper(authenticator, secrets.TARGET_PROVINCE)
     await scraper.login()
 
     async with Bot(secrets.TELEGRAM_BOT_TOKEN) as bot:
