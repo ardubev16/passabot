@@ -68,16 +68,9 @@ class ApiScraper(IScraper):
         return entries
 
     def _scrape_availability(self) -> list[AvailabilityEntry]:
-        data = {
-            "disponibilitaNonResidenti": True,
-            "comune": {"provinciaQuestura": self.province},
-            "pageInfo": {"maxResults": 5},
-            "sortInfo": {"sortList": [{"sortDirection": 0, "sortProperty": "primaDisponibilitaResidente"}]},
-        }
-
         response = self._post(
             PASSAPORTOONLINE_URL.format("a/rc/v1/appuntamento/elenca-sede-prima-disponibilita"),
-            json=data,
+            json={"comune": {"provinciaQuestura": self.province}},
         )
         if response.status_code != 200:
             raise ResponseError(f"Received status code {response.status_code} from the server")

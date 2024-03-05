@@ -10,7 +10,6 @@ from telegram import Bot
 PASSAPORTOONLINE_URL = "https://passaportonline.poliziadistato.it/cittadino/{}"
 
 
-# TODO: use pydantic and parse the date here
 @dataclass
 class AvailabilityEntry:
     first_available_date: str | None
@@ -22,7 +21,6 @@ class AvailabilityEntry:
         slots = "\n".join(f"- <code>{d:%d/%m/%Y, %k:%M}</code>: <b>{s}</b>" for d, s in self.slots)
 
         return f"""\
-<b>Prima data disponibile:</b> {self.first_available_date}
 <b>Sede:</b> {self.location}
 <b>Slot disponibili:</b>
 {slots}
