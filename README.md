@@ -4,8 +4,18 @@ Un semplice script che controlla se ci sono appuntamenti disponibili per fare il
 
 ## Come funziona
 
-Lo script si connette al sito della Polizia di Stato e controlla se ci sono appuntamenti disponibili per fare il Passaporto.
+Lo script si connette al sito della Polizia di Stato e controlla una volta al minuto se ci sono appuntamenti disponibili per fare il Passaporto.
 Se ci sono appuntamenti disponibili, invia una notifica su Telegram alla chat specificata nelle variabili d'ambiente.
+
+## Che dati fornisce
+
+Quando vengono rilevati degli appuntamenti disponibili, viene inviato un messaggio nella chat identificata dalla variabile `TELEGRAM_DATA_CHAT_ID` con il seguente contenuto:
+
+- **Sede**
+- **Slot disponibili** con data, orario e numero di posti disponibili
+- **Indirizzo** della sede
+
+<img src="assets/message_example.jpg" alt="Esempio di messaggio" width="300"/>
 
 ## Login
 
