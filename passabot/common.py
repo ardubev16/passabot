@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from datetime import datetime
 from typing import NoReturn
 
 from telegram import Bot
@@ -9,20 +10,24 @@ from telegram import Bot
 PASSAPORTOONLINE_URL = "https://passaportonline.poliziadistato.it/cittadino/{}"
 
 
+# TODO: use pydantic and parse the date here
 @dataclass
 class AvailabilityEntry:
     first_available_date: str | None
+    slots: list[tuple[datetime, int]]
     location: str
     address: str
-    informations: str
 
     def __repr__(self) -> str:
+        slots = "\n".join(f"- <code>{d:%d/%m/%Y, %k:%M}</code>: <b>{s}</b>" for d, s in self.slots)
+
         return f"""\
 <b>Prima data disponibile:</b> {self.first_available_date}
 <b>Sede:</b> {self.location}
-<b>Indirizzo:</b> {self.address}
+<b>Slot disponibili:</b>
+{slots}
 
-{self.informations}
+<b>Indirizzo:</b> {self.address}
         """
 
 

@@ -29,9 +29,9 @@ def _serialize_availability_table(table: WebElement) -> list[AvailabilityEntry]:
         entries.append(
             AvailabilityEntry(
                 first_available_date=first_available_date,
+                slots=[],
                 location=cells[2].text,
                 address=cells[3].text.replace("\n", " "),
-                informations=str(cells[4].get_property("title")),
             )
         )
     return entries
