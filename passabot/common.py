@@ -37,3 +37,12 @@ class IScraper(ABC):
     @abstractmethod
     async def check_availability(self, bot: Bot, data_chat_id: str, control_chat_id: str) -> NoReturn:
         pass
+
+
+def save_to_file(data: str) -> str:
+    filename = f"passabot_{datetime.now():%Y-%m-%d_%H-%M-%S}.html"
+    path = f"/tmp/{filename}"
+    with open(path, "w") as f:
+        f.write(data)
+
+    return path

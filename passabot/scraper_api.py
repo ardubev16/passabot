@@ -11,7 +11,7 @@ from telegram.constants import ParseMode
 from datetime import datetime
 
 from passabot.authenticators import IAuthenticator
-from passabot.common import PASSAPORTOONLINE_URL, AvailabilityEntry, IScraper
+from passabot.common import PASSAPORTOONLINE_URL, AvailabilityEntry, IScraper, save_to_file
 
 logger = logging.getLogger(__name__)
 
@@ -112,9 +112,9 @@ class ApiScraper(IScraper):
             try:
                 available = self._scrape_availability()
             except ResponseError as e:
-                message = f"{e}\n\n<pre language='json'>{e.response.headers}</pre>"
+                filepath = save_to_file(e.response.text)
+                message = f'{e}\n<code>{filepath}\n\n<pre language="json">{e.response.headers}</pre>'
                 await bot.send_message(chat_id=control_chat_id, text=message, parse_mode=ParseMode.HTML)
-                await bot.send_message(chat_id=control_chat_id, text=e.response.text)
                 logged_in = False
             except requests.exceptions.JSONDecodeError:
                 await bot.send_message(
