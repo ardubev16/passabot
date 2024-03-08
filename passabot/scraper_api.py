@@ -17,7 +17,9 @@ logger = logging.getLogger(__name__)
 
 
 class ResponseError(Exception):
-    pass
+    def __init__(self, response: requests.Response) -> None:
+        super().__init__(f"Received status code {response.status_code} from the endpoint {response.url}")
+        self.response = response
 
 
 class ApiScraper(IScraper):
@@ -56,7 +58,7 @@ class ApiScraper(IScraper):
             json={"sede": {"id": id}},
         )
         if response.status_code != 200:
-            raise ResponseError(f"Received status code {response.status_code} from the server")
+            raise ResponseError(response)
 
         entries = []
         for obj in response.json()["elenco"]:
@@ -73,7 +75,7 @@ class ApiScraper(IScraper):
             json={"comune": {"provinciaQuestura": self.province}},
         )
         if response.status_code != 200:
-            raise ResponseError(f"Received status code {response.status_code} from the server")
+            raise ResponseError(response)
 
         entries = []
         possible_appointments = response.json()["list"]
@@ -110,7 +112,9 @@ class ApiScraper(IScraper):
             try:
                 available = self._scrape_availability()
             except ResponseError as e:
-                await bot.send_message(chat_id=control_chat_id, text=str(e))
+                message = f"{e}\n\n<pre language='json'>{e.response.headers}</pre>"
+                await bot.send_message(chat_id=control_chat_id, text=message, parse_mode=ParseMode.HTML)
+                await bot.send_message(chat_id=control_chat_id, text=e.response.text)
                 logged_in = False
             except requests.exceptions.JSONDecodeError:
                 await bot.send_message(
