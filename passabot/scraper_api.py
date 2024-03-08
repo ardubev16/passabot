@@ -105,7 +105,7 @@ class ApiScraper(IScraper):
                 available = self._scrape_availability()
             except ResponseError as e:
                 filepath = save_to_file(e.response.text)
-                message = f'{e}\n<code>{filepath}\n\n<pre language="json">{e.response.headers}</pre>'
+                message = f'{e}\n<code>{filepath}</code>\n\n<pre language="json">{e.response.headers}</pre>'
                 await bot.send_message(chat_id=control_chat_id, text=message, parse_mode=ParseMode.HTML)
                 logged_in = False
             except requests.exceptions.JSONDecodeError:
