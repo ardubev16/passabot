@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 import logging
 
+import telegram
 from dotenv import load_dotenv
 from pydantic import Field
 from pydantic_settings import BaseSettings
@@ -48,6 +49,17 @@ class Secrets(BaseSettings):
         )
 
 
+async def handle_error(bot: Bot, chat_id: str, e: Exception) -> None:
+    message = f"An error occurred:\n\n<code>{e}</code>"
+    while True:
+        try:
+            await bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.HTML)
+            break
+        except telegram.error.BadRequest as re:
+            logger.error("An error occurred while sending the error message", exc_info=re)
+            await asyncio.sleep(5)
+
+
 async def main() -> None:
     load_dotenv()
     secrets = Secrets()
@@ -64,8 +76,7 @@ async def main() -> None:
                 scraper.check_availability(bot, secrets.TELEGRAM_DATA_CHAT_ID, secrets.TELEGRAM_CONTROL_CHAT_ID)
             )
         except Exception as e:
-            message = f"An error occurred:\n\n<code>{e}</code>"
-            await bot.send_message(chat_id=secrets.TELEGRAM_CONTROL_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
+            await handle_error(bot, secrets.TELEGRAM_CONTROL_CHAT_ID, e)
             raise
 
 
