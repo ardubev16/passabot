@@ -59,6 +59,7 @@ class ApiScraper(IScraper):
         )
         if response.status_code != 200:
             raise ResponseError(response)
+        logger.info(f"Reveived headers: {response.headers}")
 
         entries = []
         for obj in response.json()["elenco"]:
@@ -76,6 +77,7 @@ class ApiScraper(IScraper):
         )
         if response.status_code != 200:
             raise ResponseError(response)
+        logger.info(f"Reveived headers: {response.headers}")
 
         entries = []
         possible_appointments = response.json()["list"]
