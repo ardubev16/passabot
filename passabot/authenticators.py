@@ -1,12 +1,9 @@
-#!/usr/bin/env python3
-
-
 import asyncio
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-import selenium.webdriver.support.expected_conditions as EC
+import selenium.webdriver.support.expected_conditions as ec
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -43,7 +40,7 @@ class ManualAuthenticator(IAuthenticator):
 
 
 class Authenticator(IAuthenticator):
-    def __init__(self, credentials: Credentials, headless: bool = True) -> None:
+    def __init__(self, credentials: Credentials, *, headless: bool = True) -> None:
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--no-sandbox")
         if headless:
@@ -66,27 +63,29 @@ class Authenticator(IAuthenticator):
     def _get_csrf_token(self) -> str:
         csrf_token = self.driver.find_element(By.XPATH, "//meta[@name='_csrf']").get_attribute("content")
         if csrf_token is None:
-            raise ValueError("Could not find CSRF token")
-        logger.info(f"CSRF token: {csrf_token}")
+            msg = "Could not find CSRF token"
+            raise ValueError(msg)
+        logger.info("CSRF token: %s", csrf_token)
         return csrf_token
 
     def _get_session_id(self) -> str:
         session_id_cookie = self.driver.get_cookie("JSESSIONID")
         if session_id_cookie is None:
-            raise ValueError("Could not find JSESSIONID cookie")
+            msg = "Could not find JSESSIONID cookie"
+            raise ValueError(msg)
 
         session_id: str = session_id_cookie["value"]
-        logger.info(f"Session ID: {session_id}")
+        logger.info("Session ID: %s", session_id)
         return session_id
 
     async def login(self) -> AuthData:
         self._init_driver()
-        LOGIN_URL = PASSAPORTOONLINE_URL.format("n/sc/loginCittadino/sceltaLogin")
+        LOGIN_URL = PASSAPORTOONLINE_URL.format("n/sc/loginCittadino/sceltaLogin")  # noqa: N806
 
         # Go to the login page (PosteID)
         self.driver.get(LOGIN_URL)
         self.driver.find_element(By.XPATH, "//span[contains(text(), 'Entra con SPID')]").click()
-        self.wait.until(EC.url_changes(LOGIN_URL))
+        self.wait.until(ec.url_changes(LOGIN_URL))
         self.driver.find_element(By.XPATH, "//span[contains(text(), 'Entra con SPID')]").click()
         self.driver.find_element(By.XPATH, '//li[@data-idp="https://posteid.poste.it"]').click()
 

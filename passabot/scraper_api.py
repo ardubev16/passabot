@@ -1,19 +1,19 @@
-#!/usr/bin/env python3
-
 import asyncio
 import logging
+from datetime import datetime
 from typing import NoReturn
 
 import requests
 from selenium.common.exceptions import NoSuchElementException
 from telegram import Bot
 from telegram.constants import ParseMode
-from datetime import datetime
 
 from passabot.authenticators import IAuthenticator
 from passabot.common import PASSAPORTOONLINE_URL, AvailabilityEntry, IScraper, save_to_file
 
 logger = logging.getLogger(__name__)
+
+MAX_NOTIFICATIONS = 20
 
 
 class ResponseError(Exception):
@@ -42,16 +42,16 @@ class ApiScraper(IScraper):
 
         return True
 
-    def _get_slots(self, id: int) -> list[tuple[datetime, int]]:
+    def _get_slots(self, sede_id: int) -> list[tuple[datetime, int]]:
         response = self.session.post(
             PASSAPORTOONLINE_URL.format("n/rc/v1/utility/elenca-agenda-appuntamenti-sede-mese"),
-            json={"sede": {"id": id}},
+            json={"sede": {"id": sede_id}},
         )
-        if response.status_code != 200:
+        if response.status_code != requests.codes.ok:
             raise ResponseError(response)
-        logger.info(f"Reveived headers: {response.headers}")
+        logger.info("Reveived headers: %s", response.headers)
 
-        entries = []
+        entries: list[tuple[datetime, int]] = []
         for obj in response.json()["elenco"]:
             dt_str = obj["objectKey"].split("||_||", 1)[1]
             dt = datetime.strptime(dt_str, "%d/%m/%Y||_||%H.%M")
@@ -65,13 +65,13 @@ class ApiScraper(IScraper):
             PASSAPORTOONLINE_URL.format("a/rc/v1/appuntamento/elenca-sede-prima-disponibilita"),
             json={"comune": {"provinciaQuestura": self.province}},
         )
-        if response.status_code != 200:
+        if response.status_code != requests.codes.ok:
             raise ResponseError(response)
-        logger.info(f"Reveived headers: {response.headers}")
+        logger.info("Reveived headers: %s", response.headers)
 
-        entries = []
+        entries: list[AvailabilityEntry] = []
         possible_appointments = response.json()["list"]
-        logger.info(f"Found {len(possible_appointments)} possible appointments")
+        logger.info("Found %s possible appointments", len(possible_appointments))
         for entry in possible_appointments:
             if entry["dataPrimaDisponibilitaResidenti"] is None:
                 continue
@@ -83,11 +83,11 @@ class ApiScraper(IScraper):
                     slots=slots,
                     location=entry["descrizione"].split(" - ")[1],
                     address=entry["indirizzo"],
-                )
+                ),
             )
 
         available = [entry for entry in entries if entry.first_available_date is not None]
-        logger.info(f"Found {len(available)} available appointments")
+        logger.info("Found %s available appointments", len(available))
         return available
 
     async def check_availability(self, bot: Bot, data_chat_id: str, control_chat_id: str) -> NoReturn:
@@ -97,7 +97,7 @@ class ApiScraper(IScraper):
             if not logged_in:
                 logged_in = await self.login()
                 if not logged_in:
-                    await bot.send_message(chat_id=control_chat_id, text="Could not login, retrying in 5 minutes...")
+                    await bot.send_message(chat_id=control_chat_id, text="Could not login, retrying in 5 minutes...")  # pyright: ignore[reportCallIssue]
                     await asyncio.sleep(60 * 5)
                     continue
 
@@ -106,11 +106,12 @@ class ApiScraper(IScraper):
             except ResponseError as e:
                 filepath = save_to_file(e.response.text)
                 message = f'{e}\n<code>{filepath}</code>\n\n<pre language="json">{e.response.headers}</pre>'
-                await bot.send_message(chat_id=control_chat_id, text=message, parse_mode=ParseMode.HTML)
+                await bot.send_message(chat_id=control_chat_id, text=message, parse_mode=ParseMode.HTML)  # pyright: ignore[reportCallIssue]
                 logged_in = False
             except requests.exceptions.JSONDecodeError:
-                await bot.send_message(
-                    chat_id=control_chat_id, text="Could not decode the server response, retrying..."
+                await bot.send_message(  # pyright: ignore[reportCallIssue]
+                    chat_id=control_chat_id,
+                    text="Could not decode the server response, retrying...",
                 )
             else:
                 if len(available) == 0:
@@ -119,11 +120,11 @@ class ApiScraper(IScraper):
                     notifications_counter += 1
 
                 for entry in available:
-                    await bot.send_message(
+                    await bot.send_message(  # pyright: ignore[reportCallIssue]
                         chat_id=data_chat_id,
                         text=str(entry),
                         parse_mode=ParseMode.HTML,
-                        disable_notification=notifications_counter >= 20,
+                        disable_notification=notifications_counter >= MAX_NOTIFICATIONS,
                     )
 
             await asyncio.sleep(60)

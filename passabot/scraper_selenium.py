@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import asyncio
 import logging
 from typing import NoReturn
@@ -20,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def _serialize_availability_table(table: WebElement) -> list[AvailabilityEntry]:
-    entries = []
+    entries: list[AvailabilityEntry] = []
     for row in table.find_elements(By.TAG_NAME, "tr"):
         cells = row.find_elements(By.TAG_NAME, "td")
         first_available_date = None
@@ -32,13 +30,13 @@ def _serialize_availability_table(table: WebElement) -> list[AvailabilityEntry]:
                 slots=[],
                 location=cells[2].text,
                 address=cells[3].text.replace("\n", " "),
-            )
+            ),
         )
     return entries
 
 
 class SeleniumScraper(IScraper):
-    def __init__(self, authenticator: IAuthenticator, headless: bool = True) -> None:
+    def __init__(self, authenticator: IAuthenticator, *, headless: bool = True) -> None:
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--no-sandbox")
         if headless:
@@ -64,13 +62,13 @@ class SeleniumScraper(IScraper):
             {
                 "name": "JSESSIONID",
                 "value": auth_data.session_id,
-            }
+            },
         )
         logger.info("Logged in with JSESSIONID cookie")
         return True
 
     def _view_locations(self) -> None:
-        SCELTA_COMUNE_URL = PASSAPORTOONLINE_URL.format("a/sc/wizardAppuntamentoCittadino/sceltaComune")
+        SCELTA_COMUNE_URL = PASSAPORTOONLINE_URL.format("a/sc/wizardAppuntamentoCittadino/sceltaComune")  # noqa: N806
 
         self.driver.get(SCELTA_COMUNE_URL)
         for _ in range(3):
@@ -81,7 +79,8 @@ class SeleniumScraper(IScraper):
                 logger.error("Could not find selectRichiedente, refreshing...")
             self.driver.refresh()
         else:
-            raise NoSuchElementException("Could not find selectRichiedente")
+            msg = "Could not find selectRichiedente"
+            raise NoSuchElementException(msg)
 
         Select(self.driver.find_element(By.ID, "selectRichiedente")).select_by_visible_text("Me stesso")
         self.driver.find_element(By.XPATH, "//button[contains(text(), 'Continua')]").click()
@@ -104,10 +103,10 @@ class SeleniumScraper(IScraper):
             '//*[@id="tabComuneScelto"]/section/section/section/table/tbody',
         )
         serialized = _serialize_availability_table(table)
-        logger.info(f"Found {len(serialized)} possible appointments")
+        logger.info("Found %s possible appointments", len(serialized))
 
         available = [entry for entry in serialized if entry.first_available_date is not None]
-        logger.info(f"Found {len(available)} available appointments")
+        logger.info("Found %s available appointments", len(available))
 
         return available
 
@@ -121,15 +120,16 @@ class SeleniumScraper(IScraper):
                         available = self._scrape_availability()
                     except NoSuchElementException:
                         logger.error("Could not find the availability table, retrying...")
-                        await bot.send_message(
-                            chat_id=control_chat_id, text="Could not find the availability table, retrying..."
+                        await bot.send_message(  # pyright: ignore[reportCallIssue]
+                            chat_id=control_chat_id,
+                            text="Could not find the availability table, retrying...",
                         )
                     else:
                         for entry in available:
-                            await bot.send_message(chat_id=data_chat_id, text=str(entry), parse_mode=ParseMode.HTML)
+                            await bot.send_message(chat_id=data_chat_id, text=str(entry), parse_mode=ParseMode.HTML)  # pyright: ignore[reportCallIssue]
                     await asyncio.sleep(60)
                 else:
-                    await bot.send_message(chat_id=control_chat_id, text="Could not login, retrying in 5 minutes...")
+                    await bot.send_message(chat_id=control_chat_id, text="Could not login, retrying in 5 minutes...")  # pyright: ignore[reportCallIssue]
                     await asyncio.sleep(60 * 5)
         except NoSuchElementException:
             self.driver.save_screenshot("error.png")

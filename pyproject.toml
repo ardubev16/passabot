@@ -1,9 +1,19 @@
 [tool.pyright]
 pythonVersion = "3.12"
-
-[tool.mypy]
-python_version = "3.12"
-strict = true
+typeCheckingMode = "strict"
+reportUnknownMemberType = false
 
 [tool.ruff]
+target-version = "py312"
 line-length = 120
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "ANN1",   # Missing type self, cls (deprecated)
+    "D1",     # Missing docstring in public: module, class, method, function, package, magic method, nested class, init
+    "D203",   # 1 blank line required before class docstring
+    "D212",   # Multi-line docstring summary should start at the first line
+    "DTZ",    # No Naive Datetime
+    "TRY400", # Use logging.exception() instead of logging.error() for logging exceptions
+]

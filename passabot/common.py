@@ -1,8 +1,7 @@
-#!/usr/bin/env python3
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import NoReturn
 
 from telegram import Bot
@@ -39,10 +38,10 @@ class IScraper(ABC):
         pass
 
 
-def save_to_file(data: str) -> str:
+def save_to_file(data: str) -> Path:
     filename = f"passabot_{datetime.now():%Y-%m-%d_%H-%M-%S}.html"
-    path = f"/tmp/{filename}"
-    with open(path, "w") as f:
+    path = Path("/tmp", filename)  # noqa: S108
+    with path.open("w") as f:
         f.write(data)
 
     return path

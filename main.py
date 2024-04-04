@@ -53,10 +53,10 @@ async def handle_error(bot: Bot, chat_id: str, e: Exception) -> None:
     message = f"An error occurred:\n\n<code>{e}</code>"
     while True:
         try:
-            await bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.HTML)
+            await bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.HTML)  # pyright: ignore[reportCallIssue]
             break
-        except telegram.error.BadRequest as re:
-            logger.error("An error occurred while sending the error message", exc_info=re)
+        except telegram.error.BadRequest:
+            logger.exception("An error occurred while sending the error message")
             await asyncio.sleep(5)
 
 
@@ -64,16 +64,15 @@ async def main() -> None:
     load_dotenv()
     secrets = Secrets()
 
-    # authenticator = ManualAuthenticator(secrets.get_auth_data())
     authenticator = Authenticator(secrets.get_credentials())
     scraper = ApiScraper(authenticator, secrets.TARGET_PROVINCE)
     await scraper.login()
 
     async with Bot(secrets.TELEGRAM_BOT_TOKEN) as bot:
-        await bot.send_message(chat_id=secrets.TELEGRAM_CONTROL_CHAT_ID, text="Bot started")
+        await bot.send_message(chat_id=secrets.TELEGRAM_CONTROL_CHAT_ID, text="Bot started")  # pyright: ignore[reportCallIssue]
         try:
             await asyncio.create_task(
-                scraper.check_availability(bot, secrets.TELEGRAM_DATA_CHAT_ID, secrets.TELEGRAM_CONTROL_CHAT_ID)
+                scraper.check_availability(bot, secrets.TELEGRAM_DATA_CHAT_ID, secrets.TELEGRAM_CONTROL_CHAT_ID),
             )
         except Exception as e:
             await handle_error(bot, secrets.TELEGRAM_CONTROL_CHAT_ID, e)
